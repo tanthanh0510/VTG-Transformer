@@ -19,7 +19,8 @@ You can download the experiments we trained each dataset from [here](https://dri
 
 ### Run
 
-Please go through file [main.py](https://github.com/tanthanh0510/VTG-Transformer/blob/main/main.py#L10) to see the detail information of all parameters.
+- Please go through file [main.py](https://github.com/tanthanh0510/VTG-Transformer/blob/main/main.py#L10) to see the detail information of all parameters.
 
-Train: script_train
-Test: script_test
+- Train: script_train
+
+- Test: script_test
