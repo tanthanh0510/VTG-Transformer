@@ -88,8 +88,6 @@ class Config:
     def get_tokenizer(self, datasetName):
         if datasetName == "iu":
             return Tokenizer('iu-dataset/iu_xray_data.json', 'iu_xray', **self.config["datasets"])
-        elif datasetName == "mimic":
-            return Tokenizer('mimic-dataset/mimic-dataset/mimic_xray_data.json', 'mimic_xray', **self.config["datasets"])
         return Tokenizer('vn-dataset/ann.json', 'vn_xray', **self.config["datasets"])
 
     def getDataset(self, **kwargs):

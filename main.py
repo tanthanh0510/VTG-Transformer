@@ -12,7 +12,7 @@ def parse_args():
     parser.add_argument(
         'mode', choices=['train', 'test'], default='train', help='Train or test')
     parser.add_argument('dataset', choices=['iu', 'ad-hoc'], default='iu',
-                        help='Choose dataset (mimic or iu')
+                        help='Choose dataset (ad-hoc or iu')
     parser.add_argument('--dataFile', help='path file data', required=True)
     parser.add_argument('--pretrain', default='checkpoints',
                         help='path pretrain model')

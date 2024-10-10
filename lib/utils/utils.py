@@ -51,30 +51,6 @@ def cleanFinding(finding):
     return finding
 
 
-def preprocessData():
-    captions = pd.read_csv('mimic-cxr/txt/data/mimic_cxr_sectioned.csv')
-    splits = pd.read_csv('files/mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-split.csv')
-    splits['study_id'] = 's' + splits['study_id'].astype(str)
-    chexpert = pd.read_csv(
-        'files/mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-chexpert.csv')
-    chexpert['study_id'] = 's' + chexpert['study_id'].astype(str)
-    metadata = pd.read_csv(
-        'files/mimic-cxr-jpg/2.0.0/mimic-cxr-2.0.0-metadata.csv')
-    metadata['study_id'] = 's' + metadata['study_id'].astype(str)
-    data = pd.merge(splits, captions, left_on='study_id', right_on='study')
-    data = data.drop(columns=['study'])
-    data = pd.merge(data, metadata, left_on=['dicom_id', 'study_id', 'subject_id'], right_on=[
-        'dicom_id', 'study_id', 'subject_id'])
-    data = pd.merge(data, chexpert, left_on=['study_id', 'subject_id'], right_on=[
-                    'study_id', 'subject_id'])
-    dataNew = data.loc[data['ViewPosition'].isin(["PA", "AP"])]
-    dataNew['findings'] = dataNew['findings'].apply(cleanFinding)
-    dataNew = dataNew[dataNew['findings'].notnull()]
-    dataNew = dataNew[dataNew['findings'] != '']
-    dataNew = dataNew.reset_index(drop=True)
-    dataNew.to_csv("data.csv", index=False)
-
-
 def buildInputsWithSpecialTokens(self, token_ids_0):
     outputs = [self.bos_token_id] + token_ids_0 + [self.eos_token_id]
     return outputs

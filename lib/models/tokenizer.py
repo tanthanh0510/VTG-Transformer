@@ -14,9 +14,6 @@ class Tokenizer(object):
         if self.dataset_name == 'iu_xray':
             self.clean_report = self.clean_report_iu_xray
             self.threshold = threshold
-        elif self.dataset_name == 'mimic_xray':
-            self.clean_report = self.clean_report_mimic_cxr
-            self.threshold = 10
         else:
             self.clean_report = self.clean_report_vn_cxr
             self.threshold = 2
@@ -35,17 +32,6 @@ class Tokenizer(object):
                 tokens = self.clean_report(report).split()
                 for token in tokens:
                     total_tokens.append(token)
-        elif self.dataset_name == 'mimic_xray':
-            total_tokens = []
-            for example in self.ann['train']:
-                if only_findings and "no finding" in example['tags']:
-                    continue
-                report = example['report']+" "+example['impression'].lower()
-                tokens = self.clean_report(report).split()
-                for token in tokens:
-                    total_tokens.append(token)
-            total_tokens.extend(
-                ['positively', 'negatively', 'uncertainty']*(self.threshold+1))
         else:
             total_tokens = []
             for example in self.ann['train']:
@@ -90,22 +76,6 @@ class Tokenizer(object):
             .strip().lower().split('. ')
         def sent_cleaner(t): return re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '').
                                            replace('\\', '').replace("'", '').strip().lower())
-        tokens = [sent_cleaner(sent) for sent in report_cleaner(
-            report) if sent_cleaner(sent) != []]
-        report = ' . '.join(tokens) + ' .'
-        return report
-
-    def clean_report_mimic_cxr(self, report):
-        def report_cleaner(t): return t.replace('\n', ' ').replace('__', '_').replace('__', '_').replace('__', '_') \
-            .replace('__', '_').replace('__', '_').replace('__', '_').replace('__', '_').replace('  ', ' ') \
-            .replace('  ', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ') \
-            .replace('..', '.').replace('..', '.').replace('..', '.').replace('..', '.').replace('..', '.') \
-            .replace('..', '.').replace('..', '.').replace('..', '.').replace('1. ', '').replace('. 2. ', '. ') \
-            .replace('. 3. ', '. ').replace('. 4. ', '. ').replace('. 5. ', '. ').replace(' 2. ', '. ') \
-            .replace(' 3. ', '. ').replace(' 4. ', '. ').replace(' 5. ', '. ') \
-            .strip().lower().split('. ')
-        def sent_cleaner(t): return re.sub('[.,?;*!%^&_+():-\[\]{}]', '', t.replace('"', '').replace('/', '')
-                                           .replace('\\', '').replace("'", '').strip().lower())
         tokens = [sent_cleaner(sent) for sent in report_cleaner(
             report) if sent_cleaner(sent) != []]
         report = ' . '.join(tokens) + ' .'
