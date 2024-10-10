@@ -1,0 +1,80 @@
+#!/bin/bash
+#SBATCH --job-name=test_slurm # define job name
+#SBATCH --nodes=1             # define node
+#SBATCH --gpus-per-node=1     # define gpu limmit in 1 node
+#SBATCH --ntasks=1            # define number tasks
+#SBATCH --cpus-per-task=24    # There are 24 CPU cores
+#SBATCH --time=4-00:10:00     # Max running time = 10 minutes
+#aSBATCH --mem=1000
+#aSBATCH --mem-per-gpu=80000
+#SBATCH --exclude=node00[2-3]
+while true; do nvidia-smi > gpu_status.txt; sleep 5; done &
+module load shared conda
+. $CONDAINIT
+conda activate gnn_deep
+export PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+python main.py train iu \
+       --dataFile None \
+       --exp_name iu_swin_384_pretrain1 \
+       --encoder_name swin \
+       --imageSize 384 \
+       --train_batch 80 \
+       --test_batch 40 \
+       --val_on_epoch 1 \
+       --test_on_epoch 1 \
+       --train_epochs 100 \
+       --max_seq_length 60 \
+       --only_findings 0 \
+       --pretrained swin
+
+python main.py train iu \
+       --dataFile None \
+       --exp_name iu_vit_224_pretrain1 \
+       --encoder_name vit \
+       --imageSize 224 \
+       --train_batch 160 \
+       --test_batch 80 \
+       --val_on_epoch 1 \
+       --test_on_epoch 1 \
+       --train_epochs 100 \
+       --max_seq_length 60 \
+       --only_findings 0 \
+       --pretrained vit
+
+python main.py train iu \
+       --dataFile None \
+       --exp_name iu_swin_224_pretrain1 \
+       --encoder_name swin \
+       --imageSize 224 \
+       --train_batch 160 \
+       --test_batch 80 \
+       --val_on_epoch 1 \
+       --test_on_epoch 1 \
+       --train_epochs 100 \
+       --max_seq_length 60 \
+      --only_findings 0 \
+      --pretrained swin 
+
+python main.py train vn \
+       --dataFile None \
+       --exp_name vn_vit_224 \
+       --encoder_name vit \
+       --imageSize 224 \
+       --train_batch 160 \
+       --test_batch 80 \
+       --val_on_epoch 1 \
+       --test_on_epoch 1 \
+       --train_epochs 100 \
+       --max_seq_length 70
+
+python main.py train vn \
+       --dataFile None \
+       --exp_name vn_swin_224 \
+       --encoder_name swin \
+       --imageSize 224 \
+       --train_batch 160 \
+       --test_batch 80 \
+       --val_on_epoch 1 \
+       --test_on_epoch 1 \
+       --train_epochs 100 \
+       --max_seq_length 70

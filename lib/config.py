@@ -16,7 +16,7 @@ pretrained = {
 }
 
 
-def read_json(rpath):
+def readJson(rpath):
     with open(rpath, 'r') as f:
         return json.load(f)
 
@@ -47,7 +47,6 @@ class Config:
         self.config["datasets"]["imageSize"] = (args.imageSize, args.imageSize)
         self.config["datasets"]["tokenizer"] = self.get_tokenizer(args.dataset)
         self.config["datasets"]["seq_length"] = args.max_seq_length
-        self.config["datasets"]["only_findings"] = args.only_findings
 
         self.config["model"] = {}
         encoderConfig = {}
@@ -96,8 +95,6 @@ class Config:
     def getDataset(self, **kwargs):
         if self.config["datasetName"] == "iu":
             return IuDataset(**kwargs, **self.config["datasets"])
-        elif self.config["datasetName"] == "mimic":
-            return MimicXrcDataset(**kwargs, **self.config["datasets"])
         return AtHotDataset(**kwargs, **self.config["datasets"])
 
     def getEncoder(self, **kwargs):
@@ -159,8 +156,7 @@ class Config:
         parameter_model["tagPredict"] = tagPredict
         parameter_model["tokenizer"] = self.config["datasets"]["tokenizer"]
         parameter_model["pretrain"] = True if self.config["pretrained"] else False
-        only_findings = self.config["datasets"]["only_findings"]
-        ex_path = "_disease" if only_findings else ""
+        ex_path = ""
         if self.config["datasetName"] == "iu":
             with open(f"tags/iu{ex_path}.txt", 'r') as f:
                 parameter_model['listTag'] = f.read().splitlines()

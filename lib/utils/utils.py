@@ -93,27 +93,6 @@ def trainTokenizer(checkpointPath, allData, batchSize, vocabSize, datasetName):
     new_tokenizer.padding_side = "right"
     new_tokenizer.save_pretrained(f"{checkpointPath}/tokenizer/{datasetName}/")
 
-
-# def createPretrainModel(checkpointPath):
-#     from transformers import ViTModel, GPT2Model, AutoTokenizer, SwinModel
-#     # vit = ViTModel.from_pretrained('google/vit-base-patch16-384')
-#     # swin = SwinModel.from_pretrained('microsoft/swin-base-patch4-window12-384')
-#     # decoder = GPT2Model.from_pretrained('gpt2')
-#     tokenizer = AutoTokenizer.from_pretrained('gpt2')
-#     print(f"Tokenizer is Fast: {tokenizer.is_fast}")
-#     new_tokenizer = tokenizer.train_new_from_iterator(
-#         batch_iterator(), vocab_size=20000)
-#     tokenizer.add_special_tokens({'additional_special_tokens': ['[BOT]']})
-#     tokenizer.build_inputs_with_special_tokens = buildInputsWithSpecialTokens
-#     tokenizer.model_max_length = 128
-#     tokenizer.pad_token = tokenizer.bos_token
-#     tokenizer.padding_side = "right"
-    # vit.save_pretrained(f"{checkpointPath}/encoder/vit/")
-    # swin.save_pretrained(f"{checkpointPath}/encoder/swin/")
-    # decoder.save_pretrained(f"{checkpointPath}/decoder/")
-    # tokenizer.save_pretrained(f"{checkpointPath}/tokenizer/")
-
-
 # Tagging loss function
 # copy from https://github.com/Alibaba-MIIL/ASL/blob/main/src/loss_functions/losses.py
 
@@ -169,7 +148,8 @@ class AsymmetricLoss(nn.Module):
 def downIuDataset():
     idFile = '1N4m_eEXG1M6qRYBwIrrl3M6P4_d67m_X'
     FILENAME = 'iu-dataset.zip'
-    url = f'''wget --load-cookies /tmp/cookies.txt "https://drive.usercontent.google.com/download?confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://drive.usercontent.google.com/download?id={idFile}' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id={idFile}" -O {FILENAME} && rm -rf /tmp/cookies.txt'''
+    url = f'''wget --load-cookies /tmp/cookies.txt "https://drive.usercontent.google.com/download?confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://drive.usercontent.google.com/download?id={
+        idFile}' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id={idFile}" -O {FILENAME} && rm -rf /tmp/cookies.txt'''
     os.system(url)
     os.system(
         'mkdir iu-dataset && mv iu-dataset.zip iu-dataset/iu-dataset.zip && cd iu-dataset/ && unzip iu-dataset.zip && rm iu-dataset.zip')

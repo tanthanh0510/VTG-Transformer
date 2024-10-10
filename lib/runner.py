@@ -5,9 +5,9 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from lib.config import Config
-from lib.datasets.dataset import collate_fn
+from lib.datasets.dataset import collateFn
 from lib.experiment import Experiment
-from lib.utils.evaluation_metrics import classification_metrics, compute_scores
+from lib.utils.evaluation_metrics import classificationMetrics, computeScores
 from lib.utils.utils import AsymmetricLoss, setSeed
 from pycocoevalcap.bleu.bleu import Bleu
 from torch.utils.data import DataLoader
@@ -16,7 +16,7 @@ from tqdm import tqdm
 Bleu_scorer = None
 
 
-def init_scorer():
+def initScorer():
     global Bleu_scorer
     Bleu_scorer = Bleu_scorer or Bleu(4)
 
@@ -57,22 +57,22 @@ class Runner:
         setSeed(seed)
 
     def train(self):
-        max_epochs = self.epochs
-        self.exp.train_start_callback()
+        maxEpochs = self.epochs
+        self.exp.trainStartCallback()
         trainLoader, listTag = self.getTrainDataloader()
         model = self.config.getModel(listTag=listTag).to(self.device)
-        self.exp.model_params_callback(model)
+        self.exp.modelParamsCallback(model)
         optimizer = self.config.getOptimizer(model)
         scheduler = self.config.getLrScheduler(optimizer)
-        loss_fn = self.config.getLossFunction(
+        lossFn = self.config.getLossFunction(
             reduction='mean', label_smoothing=0.1)
         bestLoss = np.inf
-        for epoch in range(max_epochs):
-            self.exp.epoch_start_callback(epoch, max_epochs)
+        for epoch in range(maxEpochs):
+            self.exp.epochStartCallback(epoch, maxEpochs)
             model.train()
-            train_loss = 0
+            trainLoss = 0
             pbar = tqdm(trainLoader)
-            for batch_idx, (img, caption, mask, label) in enumerate(pbar):
+            for batchIdx, (img, caption, mask, label) in enumerate(pbar):
                 img, caption, mask, label = map(lambda x: x.to(self.device),
                                                 (img, caption, mask, label))
                 if len(self.deviceIds) > 1:
@@ -83,7 +83,7 @@ class Runner:
                         pixel_values=img, decoder_input_ids=caption, tagInput=label)
                 lossTag = self.lossTag(predictClass, label)
                 outputs = F.log_softmax(tokens, dim=-1)
-                lossCap = loss_fn(outputs, caption, mask)
+                lossCap = lossFn(outputs, caption, mask)
                 loss = lossCap + lossTag
                 loss.backward()
                 torch.nn.utils.clip_grad_value_(model.parameters(), 0.1)
@@ -92,34 +92,34 @@ class Runner:
                 optimizer.zero_grad()
                 pbar.set_postfix(epoch=epoch, Total_Loss=loss.item(), loss_cls=lossTag.item(),
                                  loss_cap=lossCap.item(), lr=scheduler.get_last_lr()[0])
-                train_loss += loss.item()
-                self.exp.iter_end_callback(epoch, max_epochs, batch_idx,
-                                           len(trainLoader), lossTag.item(), lossCap.item(), loss.item(), scheduler.get_last_lr()[0])
-            train_loss = train_loss/len(trainLoader)
-            self.exp.epoch_end_callback(
-                epoch, max_epochs, train_loss, model, optimizer, scheduler, bestLoss)
+                trainLoss += loss.item()
+                self.exp.iterEndCallback(epoch, maxEpochs, batchIdx,
+                                         len(trainLoader), lossTag.item(), lossCap.item(), loss.item(), scheduler.get_last_lr()[0])
+            trainLoss = trainLoss/len(trainLoader)
+            self.exp.epochEndCallback(
+                epoch, maxEpochs, trainLoss, model, optimizer, scheduler, bestLoss)
 
             if (epoch + 1) % self.valOnEpochs == 0:
-                lossTotalVal = self.val(model, loss_fn, epoch)
+                lossTotalVal = self.val(model, lossFn, epoch)
                 bestLoss = min(bestLoss, lossTotalVal)
-                self.exp.delete_model(lossTotalVal == bestLoss, epoch)
+                self.exp.deleteModel(lossTotalVal == bestLoss, epoch)
             if (epoch + 1) % self.testOnEpochs == 0:
                 self.test(model, epoch)
                 self.test(model, epoch, guide=True)
 
-    def val(self, model=None, loss_fn=None, epoch=None, on_val=True):
+    def val(self, model=None, lossFn=None, epoch=None, on_val=True):
         if on_val:
             dataLoader, listTag = self.getValDataloader()
         else:
             dataLoader, listTag = self.getTestDataloader()
-        if model is None and loss_fn is None and epoch is None:
+        if model is None and lossFn is None and epoch is None:
             model = self.config.getModel(
                 listTag=listTag).to(self.device)
-            lastCheckpointEpoch = self.exp.get_last_checkpoint_epoch()
-            modelCheckpoint = self.exp.get_epoch_model(lastCheckpointEpoch)
+            lastCheckpointEpoch = self.exp.getLastCheckpointEpoch()
+            modelCheckpoint = self.exp.getEpochModel(lastCheckpointEpoch)
             model.load_state_dict(torch.load(
                 modelCheckpoint), map_location=self.device)
-            loss_fn = self.config.getLossFunction(
+            lossFn = self.config.getLossFunction(
                 reduction='mean', label_smoothing=0.1)
         lossClassification = 0
         lossCaption = 0
@@ -127,7 +127,7 @@ class Runner:
         pbar = tqdm(dataLoader)
         model.eval()
         with torch.no_grad():
-            for batch_idx, (img, caption, mask, label) in enumerate(pbar):
+            for _, (img, caption, mask, label) in enumerate(pbar):
                 img, caption, mask, label = map(lambda x: x.to(self.device),
                                                 (img, caption, mask, label))
                 if len(self.deviceIds) > 1:
@@ -139,7 +139,7 @@ class Runner:
                 loss1 = self.lossTag(predictClass, label)
                 lossClassification += loss1.item()
                 outputs = F.log_softmax(tokens, dim=-1)
-                lossCap = loss_fn(outputs, caption, mask)
+                lossCap = lossFn(outputs, caption, mask)
                 loss = lossCap + loss1
                 lossCaption += lossCap.item()
                 lossTotal += loss.item()
@@ -148,7 +148,7 @@ class Runner:
         lossClassification /= len(dataLoader)
         lossCaption /= len(dataLoader)
         lossTotal /= len(dataLoader)
-        self.exp.eval_end_callback(
+        self.exp.evalEndCallback(
             lossCaption, lossClassification, lossTotal, epoch, on_val)
 
         return lossTotal
@@ -158,7 +158,7 @@ class Runner:
         if model is None and epoch is None:
             model = self.config.getModel(
                 listTag=listTag).to(self.device)
-            modelCheckpoint = self.exp.get_best_model()
+            modelCheckpoint = self.exp.getBestModel()
             model.load_state_dict(modelCheckpoint)
         pbar = tqdm(dataLoader)
         model.eval()
@@ -167,7 +167,7 @@ class Runner:
         captionsGT = []
         predictCaptions = []
         with torch.no_grad():
-            for batch_idx, (img, caption, mask, label) in enumerate(pbar):
+            for _, (img, caption, mask, label) in enumerate(pbar):
                 img, caption, label, mask = map(lambda x: x.to(self.device),
                                                 (img, caption, label, mask))
                 predictClass, captions = model.generate(
@@ -180,20 +180,20 @@ class Runner:
                     predictClass.detach().cpu().numpy().astype(int).tolist())
                 labels.extend(
                     label.detach().cpu().numpy().astype(int).tolist())
-        metricsNLU = compute_scores({i: [gt] for i, gt in enumerate(captionsGT)},
-                                    {i: [re] for i, re in enumerate(predictCaptions)})
-        metricsClassification = classification_metrics(
+        metricsNLU = computeScores({i: [gt] for i, gt in enumerate(captionsGT)},
+                                   {i: [re] for i, re in enumerate(predictCaptions)})
+        metricsClassification = classificationMetrics(
             labels, predictClasses)
-        self.exp.end_test_callback(
+        self.exp.endTestCallback(
             metricsNLU, metricsClassification, epoch)
         if self.saveBest:
             if metricsNLU["BLEU_1"] > self.bestBleu1:
                 self.bestBleu1 = metricsNLU["BLEU_1"]
-                self.exp.save_best_model(
+                self.exp.saveBestModel(
                     model, epoch, metricsNLU, metricsClassification, name="bleu1")
             if metricsNLU["ROUGE_L"] > self.bestRougeL:
                 self.bestRougeL = metricsNLU["ROUGE_L"]
-                self.exp.save_best_model(
+                self.exp.saveBestModel(
                     model, epoch, metricsNLU, metricsClassification, name="rougeL")
 
     def getTrainDataloader(self):
@@ -204,7 +204,7 @@ class Runner:
                           num_workers=8,
                           pin_memory=True,
                           drop_last=True,
-                          collate_fn=collate_fn), trainDataset.tags
+                          collate_fn=collateFn), trainDataset.tags
 
     def getValDataloader(self):
         valDataset = self.config.getDataset(mode="validate")
@@ -214,7 +214,7 @@ class Runner:
                           num_workers=8,
                           pin_memory=True,
                           drop_last=True,
-                          collate_fn=collate_fn), valDataset.tags
+                          collate_fn=collateFn), valDataset.tags
 
     def getTestDataloader(self):
         testDataset = self.config.getDataset(mode="test")
@@ -224,4 +224,4 @@ class Runner:
                           num_workers=8,
                           pin_memory=True,
                           drop_last=True,
-                          collate_fn=collate_fn), testDataset.tags
+                          collate_fn=collateFn), testDataset.tags

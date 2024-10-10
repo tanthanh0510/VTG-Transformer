@@ -19,7 +19,8 @@ def tie_encoder_decoder_weights(encoder: nn.Module, decoder: nn.Module,
     uninitialized_encoder_weights: List[str] = []
     if decoder.__class__ != encoder.__class__:
         print(
-            f"{decoder.__class__} and {encoder.__class__} are not equal. In this case make sure that all encoder weights are correctly initialized."
+            f"{decoder.__class__} and {
+                encoder.__class__} are not equal. In this case make sure that all encoder weights are correctly initialized."
         )
 
     def tie_encoder_to_decoder_recursively(
@@ -245,7 +246,6 @@ class VisonEncDecModel(nn.Module):
                  pixel_values: torch.Tensor,
                  max_length: int,
                  min_length: int = 20,
-                 tags: torch.LongTensor = None,
                  **kwargs) -> torch.LongTensor:
         device = pixel_values.device
         batch, height, width, channel = pixel_values.shape
@@ -276,7 +276,6 @@ class VisonEncDecModel(nn.Module):
         )
 
         logits = self.tagHead(tagging_embed[0])
-
         targets = torch.where(
             torch.sigmoid(logits) > self.threshold.to(
                 pixel_values.device),
@@ -301,11 +300,9 @@ class VisonEncDecModel(nn.Module):
             encoder_attention_mask=image_atts,
             return_dict=True,
         )
-        return_dict_in_generate = kwargs.get("return_dict_in_generate", False)
         model_kwargs = {
             "encoder_hidden_states": output_tagembedding.last_hidden_state,
             "encoder_attention_mask": None,
-            "return_dict_in_generate": return_dict_in_generate,
             "output_scores": kwargs.get("output_scores", False),
             "do_sample": False,
         }
@@ -318,8 +315,6 @@ class VisonEncDecModel(nn.Module):
             repetition_penalty=1.0,
             **model_kwargs)
 
-        if return_dict_in_generate:
-            return targets, outputs["sequences"], outputs['scores']
         captions = []
         for output in outputs:
             caption = self.tokenizer.decode(output.cpu().numpy()[1:])

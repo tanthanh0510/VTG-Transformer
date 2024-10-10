@@ -58,7 +58,7 @@ def main():
     ) else torch.device('cuda')
     deviceIds = [i for i in range(torch.cuda.device_count())]
     exp = Experiment(args.exp_name, mode=args.mode,
-                     model_checkpoint_interval=args.val_on_epoch, pretrain=args.pretrain)
+                     modelCheckpointInterval=args.val_on_epoch, pretrain=args.pretrain)
     cfg = Config(args, device)
     runner = Runner(cfg, exp, epochs=args.train_epochs, testBatchSize=args.test_batch, valOnEpochs=args.val_on_epoch,
                     trainBatchSize=args.train_batch, testOnEpochs=args.test_on_epoch, deviceIds=deviceIds)

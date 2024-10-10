@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH --job-name=test_slurm # define job name
+#SBATCH --nodes=1             # define node
+#SBATCH --gpus-per-node=2     # define gpu limmit in 1 node
+#SBATCH --ntasks=1            # define number tasks
+#SBATCH --cpus-per-task=24    # There are 24 CPU cores
+#SBATCH --time=4-00:10:00     # Max running time = 10 minutes
+#aSBATCH --mem=1000
+#aSBATCH --mem-per-gpu=80000
+#SBATCH --nodelist=node001
+nvidia-smi
+source ~/.bashrc
+conda env list
+echo "Setup conda env"
+conda create --name gnn_deep python=3.10 -y
+module load shared conda
+. $CONDAINIT
+conda activate gnn_deep
+echo "Install torch"
+pip install torch==2.0.0 torchvision==0.15.1 torchaudio==2.0.1 --index-url https://download.pytorch.org/whl/cu118
+echo "Install other requirements"
+pip install -r requirements.txt
+
+echo "Done setup environment"

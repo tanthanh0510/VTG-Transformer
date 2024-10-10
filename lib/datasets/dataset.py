@@ -144,7 +144,7 @@ class AtHotDataset(Dataset):
         return len(self.keys)
 
 
-def collate_fn(data):
+def collateFn(data):
     images, captionIds, captionsMasks, seqLengths, tags = zip(*data)
     images = torch.stack(images, 0)
     maxSeqLength = max(seqLengths)
