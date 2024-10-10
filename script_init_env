@@ -12,10 +12,10 @@ nvidia-smi
 source ~/.bashrc
 conda env list
 echo "Setup conda env"
-conda create --name gnn_deep python=3.10 -y
+conda create --name vtg_transformer python=3.10 -y
 module load shared conda
 . $CONDAINIT
-conda activate gnn_deep
+conda activate vtg_transformer
 echo "Install torch"
 pip install torch==2.0.0 torchvision==0.15.1 torchaudio==2.0.1 --index-url https://download.pytorch.org/whl/cu118
 echo "Install other requirements"
